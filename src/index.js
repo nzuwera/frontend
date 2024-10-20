@@ -1,7 +1,7 @@
-import {WalletManager} from "./wallet-manager.js";
-import {Utils} from "./utils.js";
-import {AuthManager} from "./auth-manager.js";
-import {SocketsManager} from "./sockets-manager.js";
+import {WalletManager} from "./js/wallet-manager.js";
+import {Utils} from "./js/utils.js";
+import {AuthManager} from "./js/auth-manager.js";
+import {SocketsManager} from "./js/sockets-manager.js";
 
 const connectBtn = $("#connect");
 const disconnectBtn = $("#disconnect");
