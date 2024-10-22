@@ -4,10 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "optimize-css": "postcss src/css/main.css --use autoprefixer cssnano postcss-pxtorem --output dist/main.css --no-map",
-    "transpile-js": "babel src/js/index.js -o dist/index.js --presets=@babel/preset-env",
-    "minify-js": "uglifyjs dist/index.js --compress -o dist/index.js",
-    "build": "npm run optimize-css & npm run transpile-js & npm run minify-js"
+    "build": "./build.sh"
   },
   "keywords": [],
   "author": "nzuwera",
