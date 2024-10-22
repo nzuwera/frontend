@@ -11,7 +11,6 @@ const socketManager = new SocketsManager();
 const walletManager = new WalletManager();
 
 const content_wrapper = document.getElementById('content-wrapper');
-
 export class AuthManager {
 
     constructor() {
@@ -22,8 +21,7 @@ export class AuthManager {
         const loginResponse = http.httpPost(apiUrls.authUrl(), {
             username: username,
             password: password
-        })
-        loginResponse.then(function (success) {
+        }).then(function (success) {
             console.log(success)
             local_storage.set("token", success.jwt)
             local_storage.set("refreshToken", success.refreshToken)
@@ -40,10 +38,12 @@ export class AuthManager {
 
 
     init() {
-        // this.setUserProfile()
+        console.log("Init started")
+        this.setUserProfile()
         // this.setWalletAccount()
         this.displayContent()
         // this.socketConnect()
+        console.log("Init End")
     }
 
     logout() {
@@ -78,7 +78,7 @@ export class AuthManager {
 
     setUserProfile() {
         // getCustomer WalletAccount
-        walletManager.displayUserProfile(document.getElementById("userProfile"))
+        walletManager.displayUserProfile()
     }
 
     setWalletAccount() {

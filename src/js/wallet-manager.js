@@ -24,47 +24,40 @@ export class WalletManager {
 
     async getWalletHistory() {
         const token = local_storage.get('token')
-        const phoneNumber = this.userProfile.phoneNumber;
+        const phoneNumber = this.getProfile().phoneNumber;
         return http.httpGet(apiUrls.walletHistoryUrl(phoneNumber), token)
     }
 
 
     getProfile() {
-        let token = local_storage.get('token')
-        console.log(token)
-        let profile = utils.decodeJwt(token)
-        return JSON.parse(profile);
+        let user = local_storage.get('user-profile');
+        return JSON.parse(user);
     }
 
     displayUserProfile = (selector) => {
-        console.log(this.getProfile())
-        selector.removeClass('d-none')
-        selector.html(
-            `<div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="card-title">User Profile</h6>
-                </div>
-                <div class="card-body gy-4">
-                    <h2 class="mb-3 d-flex align-items-center justify-content-between">
-                      <div class="p-3 border border-primary grd-primary-light rounded-5 d-flex">
-                        <i class="bi bi-person-circle fs-4 lh-1 text-primary"></i>
-                      </div>
-                      <span class="text-info">${this.userProfile.fullName}</span>
-                    </h2>
-                    <ul class="list-group list-group-flush gy-4 m-0 small text-secondary">
-                      <li class="list-group-item list-unstyled d-flex justify-content-between align-items-center">
-                          <i class="bi bi-envelope fs-4"></i> <span class="text-info bg-opacity-10">${this.userProfile.email}</span>
-                      </li>
-                      <li class="list-group-item list-unstyled d-flex justify-content-between align-items-center">
-                        <i class="bi bi-phone fs-4"></i> <span class="text-info bg-opacity-10">${this.userProfile.phoneNumber}</span>
-                      </li>
-                      <li class="list-group-item list-unstyled d-flex justify-content-between align-items-center">
-                          <i class="bi bi-tag fs-4"></i> <span class="text-info bg-opacity-10">${this.userProfile.idTag}</span>
-                      </li>
-                    </ul>
-                </div>
-            </div>`
-        )
+        let user_profile = this.getProfile();
+        console.log(user_profile)
+        document.getElementById('user-profile').innerHTML = `<div class="card border-0">
+                        <img src="img/user-profile.png" class="card-img-top mb-2" alt="User profile image">
+                        <div class="card-body d-flex justify-content-between">
+                            <h5 class="card-title">${user_profile.fullName}</h5>
+                            <p class="badge text-bg-success">Active</p>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="bi bi-envelope"></i>
+                                <span>${user_profile.email}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-phone"></i>
+                                <span>${user_profile.phoneNumber}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-tag"></i>
+                                <span>${user_profile.idTag}</span>
+                            </li>
+                        </ul>
+                    </div>`
     }
 
     displayUserBalance = (selector, walletAccount) => {
