@@ -1,47 +1,43 @@
 import {HttpManager} from "./http-manager.js";
-import {BootPagination} from "./boot-pagination.js";
 import {apiUrls} from "./api-urls.js";
 import {Utils} from "./utils.js"
 
+const http = new HttpManager();
+const utils = new Utils();
+const local_storage = utils.storage();
 export class WalletManager {
-    constructor() {
-        this.utils = new Utils();
-        this.http = new HttpManager();
-        this.storage = new StorageManager();
-        this.userProfile = this.getProfile();
-    }
 
     async topUpWallet(amount) {
-        const token = this.utils.storage.get('token')
+        const token = local_storage.get('token')
         const payload = {
             amount: amount,
-            phoneNumber: this.userProfile.phoneNumber
+            phoneNumber: this.getProfile().phoneNumber
         }
-        return this.http.httpPost(token, apiUrls.walletTopUpUrl(), payload)
+        return http.httpPost(token, apiUrls.walletTopUpUrl(), payload)
     }
 
     async getWalletAccount() {
-        const token = this.utils.storage.get('token')
-        const customerId = this.userProfile.userId;
-        return this.http.httpGet(apiUrls.walletUrl(customerId), token)
+        const token = local_storage.get('token')
+        const customerId = this.getProfile().userId;
+        return http.httpGet(apiUrls.walletUrl(customerId), token)
     }
 
     async getWalletHistory() {
-        const token = this.utils.storage.get('token')
+        const token = local_storage.get('token')
         const phoneNumber = this.userProfile.phoneNumber;
-        return this.http.httpGet(apiUrls.walletHistoryUrl(phoneNumber), token)
+        return http.httpGet(apiUrls.walletHistoryUrl(phoneNumber), token)
     }
 
 
     getProfile() {
-        let token = this.utils.storage.get('token')
+        let token = local_storage.get('token')
         console.log(token)
-        let profile = this.utils.decodeJwt(token)
+        let profile = utils.decodeJwt(token)
         return JSON.parse(profile);
     }
 
     displayUserProfile = (selector) => {
-        console.log(this.userProfile)
+        console.log(this.getProfile())
         selector.removeClass('d-none')
         selector.html(
             `<div class="card mb-3">
@@ -82,7 +78,7 @@ export class WalletManager {
                           <div class="p-3 border border-primary grd-primary-light rounded-5 d-flex">
                             <i class="bi bi-wallet2 fs-4 lh-1 text-primary"></i>
                           </div>
-                          <span class="text-info">${this.utils.toRwf.format(walletAccount.accountBalance)}</span>
+                          <span class="text-info">${utils.toRwf.format(walletAccount.accountBalance)}</span>
                         </h2>
                         <p class="m-0 small text-secondary">
                           Account:<span class="float-end badge bg-info text-info bg-opacity-10">${walletAccount.accountNumber}</span>

@@ -1,31 +1,30 @@
 import {Utils} from "./utils.js";
 import {socketsTopics} from "./sockets-topics.js";
-import {Stomp} from "https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js";
+
+
+const stompClient = Stomp.client(socketsTopics.wsUrl);
+const utils = new Utils();
+const local_storage = utils.storage();
 
 export class SocketsManager {
-    constructor() {
-        this.client = Stomp.client(socketsTopics.wsUrl);
-        this.utils = new Utils()
-    }
-
     connect() {
-        this.client.connect(
-            {Authorization: `Bearer ${this.utils.storage().get("token")}`}, (frame) => {
+        stompClient.connect(
+            {Authorization: `Bearer ${local_storage.get("token")}`}, (frame) => {
                 console.log(frame);
                 this.setConnected();
-                this.client.subscribe(socketsTopics.wallet, (message) => {
+                stompClient.subscribe(socketsTopics.wallet, (message) => {
                     this.processPushNotification(message.body, this.updateWalletResponse)
                 });
-                this.client.subscribe(socketsTopics.reservation, (message) => {
+                stompClient.subscribe(socketsTopics.reservation, (message) => {
                     this.processPushNotification(message.body, this.updateReservationResponse)
                 });
-                this.client.subscribe(socketsTopics.transaction, (message) => {
+                stompClient.subscribe(socketsTopics.transaction, (message) => {
                     this.processPushNotification(message.body, this.updateTransactionResponse)
                 });
-                this.client.subscribe(socketsTopics.meterValues, (message) => {
+                stompClient.subscribe(socketsTopics.meterValues, (message) => {
                     this.processPushNotification(message.body, this.updateMeterValuesResponse)
                 });
-                this.client.subscribe(socketsTopics.heartBeat, (message) => {
+                stompClient.subscribe(socketsTopics.heartBeat, (message) => {
                     this.processPushNotification(message.body, this.updateHeartBeatResponse)
                 });
             });
@@ -33,7 +32,7 @@ export class SocketsManager {
 
     disconnect() {
         if (this.client !== null) {
-            this.client.disconnect(function () {
+            stompClient.disconnect(function () {
                 console.log("disconnected")
                 this.setDisconnected();
             });

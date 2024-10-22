@@ -17,22 +17,16 @@ export class Utils {
     }
 
     onBtnClick = (btn, callback) =>{
-        btn.click(callback)
+        btn.addEventListener('click',callback)
     }
 
     storage = () => {
-        function empty(){
-            localStorage.clear()
-        }
-        function set(key,object){
-            localStorage.setItem(key,object)
-        }
-        function remove(key){
-            localStorage.removeItem(key)
-        }
-        function get(key){
-            return localStorage.getItem(key)
-        }
+        return {
+            empty: () => localStorage.clear(),
+            set: (key, object) => localStorage.setItem(key, object),
+            remove: (key) => localStorage.removeItem(key),
+            get: (key) => localStorage.getItem(key)
+        };
     }
 
     decodeJwt(token) {
