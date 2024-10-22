@@ -1,0 +1,27 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "optimize-css": "postcss src/css/main.css --use autoprefixer cssnano postcss-pxtorem --output dist/main.css --no-map",
+    "transpile-js": "babel src/js/index.js -o dist/index.js --presets=@babel/preset-env",
+    "minify-js": "uglifyjs dist/index.js --compress -o dist/index.js",
+    "build": "npm run optimize-css & npm run transpile-js & npm run minify-js"
+  },
+  "keywords": [],
+  "author": "nzuwera",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@babel/cli": "^7.25.7",
+    "@babel/core": "^7.25.8",
+    "@babel/preset-env": "^7.25.8",
+    "autoprefixer": "^10.4.20",
+    "cssnano": "^7.0.6",
+    "postcss": "^8.4.47",
+    "postcss-cli": "^11.0.0",
+    "postcss-pxtorem": "^6.1.0",
+    "uglify-js": "^3.19.3"
+  }
+}
