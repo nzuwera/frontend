@@ -1,24 +1,16 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.html",
   "type": "module",
   "scripts": {
-    "build": "./build.sh"
+    "build-run": "./build.sh frontend"
   },
   "keywords": [],
   "author": "nzuwera",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@babel/cli": "^7.25.7",
-    "@babel/core": "^7.25.8",
-    "@babel/preset-env": "^7.25.8",
-    "autoprefixer": "^10.4.20",
-    "cssnano": "^7.0.6",
-    "postcss": "^8.4.47",
-    "postcss-cli": "^11.0.0",
-    "postcss-pxtorem": "^6.1.0",
-    "uglify-js": "^3.19.3"
+    "serve": "^14.2.4"
   }
 }

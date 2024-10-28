@@ -2,15 +2,17 @@ import {apiUrls} from "./api-urls.js";
 import {HttpManager} from "./http-manager.js";
 import {WalletManager} from "./wallet-manager.js";
 import {Utils} from "./utils.js";
-import {SocketsManager} from "./sockets-manager.js";
+import {stompJs} from "./sockets-manager.js";
+import {socketsTopics} from "./sockets-topics.js";
 
 const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
-const socketManager = new SocketsManager();
 const walletManager = new WalletManager();
 
 const content_wrapper = document.getElementById('content-wrapper');
+const responseMessage = document.getElementById('responseMessage');
+
 export class AuthManager {
 
     constructor() {
@@ -28,38 +30,82 @@ export class AuthManager {
             local_storage.set("user-profile", utils.decodeJwt(success.jwt))
             local_storage.set("logged-in", true)
             authManager.init();
+            authManager.initStomp();
         }).catch(function (error) {
             console.log(`Login failed - ${error}`)
             return false;
-        }).finally(()=>{
+        }).finally(() => {
             console.info("Logged in successfully")
         })
     }
 
+    initStomp() {
+        stompJs.onConnect = (frame) => {
+            let phone = JSON.parse(local_storage.get("user-profile")).phoneNumber;
+            console.log('Connected: ' + frame);
+            // Subscribe to walletBalance
+            console.log('Wallet Account: ' + phone);
+
+
+            // Subscribe to walletTransactions
+            stompJs.subscribe(socketsTopics.walletTransaction, function (walletTransactions) {
+                console.log(walletTransactions)
+                // called when the client receives a STOMP message from the server
+                if (walletTransactions.body) {
+                    console.info('got walletTransactions message with body ' + walletTransactions.body);
+                    walletManager.loadTransactions(0)
+                } else {
+                    alert('got empty walletTransactions message');
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});
+
+            // Subscribe to user errors
+            stompJs.subscribe(socketsTopics.userError, function (userErrors) {
+                console.log(userErrors)
+                // called when the client receives a STOMP message from the server
+                if (userErrors.body) {
+                    utils.showAlert(`got userErrors message with body ${userErrors.body}`, 'danger', responseMessage);
+                } else {
+                    utils.showAlert('got empty userErrors message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});
+        };
+
+        stompJs.onWebSocketError = (error) => {
+            utils.showAlert(`Error with websocket ${error}`, 'danger', responseMessage);
+        };
+
+        stompJs.onStompError = (frame) => {
+            console.error('Broker reported error: ' + frame.headers['message']);
+            console.error('Additional details: ' + frame.body);
+        };
+    }
 
     init() {
         console.log("Init started")
-        this.setUserProfile()
-        // this.setWalletAccount()
+        walletManager.renderUserProfile()
+        walletManager.getWalletAccount()
+        walletManager.loadTransactions(0)
         this.displayContent()
-        // this.socketConnect()
+        stompJs.activate();
         console.log("Init End")
     }
 
     logout() {
         const authManager = this
         const loginResponse = http.httpGet(apiUrls.logoutUrl(), local_storage.get('token'))
-        const response = loginResponse.then(function (success) {
+        loginResponse.then(function (success) {
             console.log(success)
             authManager.resetAll()
         }).catch(function (error) {
-            console.log(`Logout failed - ${error}`)
+            utils.showAlert(`Logout failed - ${error}`, 'danger', responseMessage)
         }).finally(function (e) {
             console.info("Logout processed successfully");
         })
     }
 
     resetAll() {
+        stompJs.deactivate();
         local_storage.empty()
         this.toggleLoginDiv().hide_logged_content()
     }
@@ -76,26 +122,6 @@ export class AuthManager {
         })
     }
 
-    setUserProfile() {
-        // getCustomer WalletAccount
-        walletManager.displayUserProfile()
-    }
-
-    setWalletAccount() {
-        const walletManager = new WalletManager();
-        let walletAccountResponse = walletManager.getWalletAccount();
-        walletAccountResponse.then(function (account) {
-            console.log(account)
-            console.log(account.data)
-            walletManager.displayUserBalance(document.getElementById("walletBalance"), account.data)
-        }, function (error) {
-            console.log(`Failed to get walletAccount ${error}`)
-        })
-    }
-
-    socketConnect() {
-        socketManager.connect();
-    }
 
     displayContent() {
         if (content_wrapper.classList.contains('d-none')) {

@@ -1,6 +1,11 @@
 #!/bin/bash
+CONTAINER_NAME=$1
 
-docker stop websockets
-docker rm websockets
-docker build -t websockets .
-docker run --name websockets -d -p 80:80 websockets
+# Create dist folder if not exists
+[ -d dist ] || mkdir dist
+cp -rf src/* dist/
+# Build docker image
+docker stop "${CONTAINER_NAME}"
+docker rm "${CONTAINER_NAME}"
+docker build -t "${CONTAINER_NAME}:latest" .
+docker run --name "${CONTAINER_NAME}" -d -p 80:3000 "${CONTAINER_NAME}"
