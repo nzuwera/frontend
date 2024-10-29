@@ -69,6 +69,28 @@ export class AuthManager {
                     utils.showAlert('got empty userErrors message', 'danger', responseMessage);
                 }
             }, {"Authorization": `Bearer ${local_storage.get('token')}`});
+
+            // Subscribe to reservation messages
+/*            stompJs.subscribe(socketsTopics.reservation, function (reservations) {
+                console.log(reservations)
+                // called when the client receives a STOMP message from the server
+                if (reservations.body) {
+                    utils.showAlert(`got reservation message with body ${reservations.body}`, 'success', responseMessage);
+                } else {
+                    utils.showAlert('got empty reservation message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});*/
+
+            // Subscribe to chargingSession messages
+ /*           stompJs.subscribe(socketsTopics.chargingSession, function (reservations) {
+                console.log(reservations)
+                // called when the client receives a STOMP message from the server
+                if (reservations.body) {
+                    utils.showAlert(`got chargingSession message with body ${reservations.body}`, 'success', responseMessage);
+                } else {
+                    utils.showAlert('got empty chargingSession message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});*/
         };
 
         stompJs.onWebSocketError = (error) => {

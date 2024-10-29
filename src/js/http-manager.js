@@ -23,13 +23,14 @@ export class HttpManager {
         try {
             console.log(`Fetch URL : ${this.baseURL + url}`)
             const response = await fetch(this.baseURL + url, options);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
+            return await response.json()
         } catch (err) {
             console.error(`Failed to perform ${method} request to ${url}`, err);
-            throw err;
+            let error = new Error()
+            error.message = `Failed to perform ${method} request to ${url}`
+            error.status = false
+            error.code = 500
+            throw error;
         }
     }
 

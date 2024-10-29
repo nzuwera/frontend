@@ -7,7 +7,7 @@ export class Utils {
         currency: 'RWF',
     });
 
-    showAlert = (message, type, alertPlaceholder, duration = 5000) => {
+    showAlert = (message, type, alertPlaceholder, duration = 15000) => {
         // Create the alert HTML content
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;

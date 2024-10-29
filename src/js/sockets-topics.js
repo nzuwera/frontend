@@ -3,7 +3,7 @@ export const socketsTopics = {
     userWalletBalance:"/user/queue/WalletBalance",
     walletTransaction:"/user/queue/WalletTransaction",
     reservation:"/user/queue/Reservation",
-    transaction:"/user/queue/Transaction",
+    chargingSession:"/user/queue/ChargingSession/A03213807419/1",
     meterValues:"/user/queue/MeterValues",
     heartBeat:"/user/queue/HeartBeat",
     userError:"/user/queue/errors",
