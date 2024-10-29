@@ -1,6 +1,7 @@
 import {Utils} from "./utils.js";
 import {AuthManager} from "./auth-manager.js";
 import {WalletManager} from "./wallet-manager.js";
+import {ReservationManager} from "./reservation-manager.js";
 
 document.addEventListener("DOMContentLoaded", function () {
     const loginForm = document.getElementById("login-form");
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const local_storage = utils.storage();
     const walletManager = new WalletManager();
     const auth = new AuthManager();
+    const reservation = new ReservationManager();
 
 // Wallet TopUp Modal
     const phoneNumberInput = document.getElementById("phoneNumber");
@@ -53,5 +55,37 @@ document.addEventListener("DOMContentLoaded", function () {
         // Set a value to phoneNumber (e.g., retrieve from a variable or function)
         phoneNumberInput.value = JSON.parse(local_storage.get('user-profile')).phoneNumber; // Replace this with dynamic value as needed
     });
+
+
+    // Tab navigations
+    let navigationTabList = document.querySelectorAll('#navigation-tabs li a.nav-link')
+    navigationTabList.forEach(navigationTab => {
+        const selectedTab = new bootstrap.Tab(navigationTab)
+        navigationTab.addEventListener('click', event => {
+            event.preventDefault()
+            switch (event.target.id) {
+                case "tab-reservation":
+                    // Reset reservation form
+                    // Get Chargers in drop down box
+                    // Get Customer vehicles in drop down box
+                    break;
+                case "tab-charging":
+                    break;
+                case "tab-wallet":
+                    // Get Active reservation if no active reservation no cha
+                    break;
+                default:
+                    console.log(`unknown tab ${event.target.id}`)
+                    break;
+
+            }
+            selectedTab.show()
+            console.log(`---- Current tab ${event.target.id}: tab content_id = ${event.target.getAttribute('href')}`)
+        })
+    })
+
+    // Cancel reservation processing
+    reservation.properties.form.addEventListener('submit', reservation.handlers().formHandler)
+    reservation.properties.cancelReservationBtn.addEventListener('click', reservation.handlers().cancelReservation)
 
 })
