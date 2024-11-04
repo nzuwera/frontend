@@ -210,56 +210,65 @@
                 </div>
                 <!-- Charging tab content -->
                 <div class="tab-pane" id="charging" role="tabpanel" aria-labelledby="tab-charging">
-                    <!-- Charging Card -->
                     <div class="row gy-3 mb-3">
-                        <div class="col-12 py-1">
-                            <div class="card">
-                                <div class="card-header">Charging session</div>
-                                <div class="card-body gy-5">
-                                    <div class="d-flex justify-content-between">
+                        <!-- Charging Card -->
+                        <div class="col-xxl-3 col-xl-3 col-lg-3 col-md-12 col-sm-12 py-1">
+                            <div class="card mb-2">
+                                <div class="card-header mb-3">Charging session</div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
                                         <div class="d-flex flex-column gy-1">
-                                            <em class="text-muted">Plug connected</em>
-                                            <h3 class="h3">Charging...</h3>
+                                            <span class="text-muted mb-1"
+                                                  style="font-size: xx-small;">Plug connected</span>
+                                            <span style="font-weight: bold">Charging...</span>
                                         </div>
-                                        <div class="d-flex flex-column">
-                                            <span><i class="bi bi-ev-station"></i> &nbsp;A03213807419</span>
-                                            <span><i class="bi bi-plug-fill"></i> &nbsp;1</span>
-                                        </div>
+                                        <i class="bi bi-ev-station" style="font-size: xx-large"></i>
                                     </div>
-                                    <div class="progress" role="progressbar"
+                                    <div class="progress mb-4" role="progressbar"
                                          aria-label="Animated striped example" aria-valuenow="55"
-                                         aria-valuemin="0" aria-valuemax="100" style="height: 35px">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                             style="width: 55%"><span class="badge rounded-pill"
-                                                                      style="font-size: 1.5rem"><i
-                                                class="bi bi-lightning-charge"></i>&nbsp;55%</span></div>
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar" style="width: 55%;height: 1rem"></div>
                                     </div>
-                                    <div class="d-flex justify-content-between">
-                                        <h1 class="h1">RWF1,500</h1>
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
                                         <div class="d-flex flex-column gy-1">
-                                            <em class="text-muted">Time to full charge</em>
-                                            <p class="text-muted">02:34:34</p>
+                                            <span style="font-size: xxx-large;font-weight: bold">55%</span>
+                                        </div>
+                                        <div class="d-flex flex-column gy-1">
+                                            <span class="text-muted mb-1" style="font-size: xx-small;">Time to full charge</span>
+                                            <span class="text-muted">02:34:34</span>
                                         </div>
                                     </div>
-                                    <div class="d-grid gap-3">
-                                        <button class="btn btn-primary text-center" type="button">
-                                            Start
-                                        </button>
-                                        <button class="btn btn-danger text-center" type="button">
-                                            Stop
-                                        </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div class="d-flex flex-column gy-1">
+                                            <span class="text-muted mb-1"
+                                                  style="font-size: xx-small;">Current usage</span>
+                                            <span class="text-muted">30kW</span>
+                                        </div>
+                                        <div class="d-flex flex-column gy-1">
+                                            <span class="text-muted mb-1"
+                                                  style="font-size: xx-small;">Total spent</span>
+                                            <span class="text-muted">RWF 1,500</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            <div class="d-grid gap-3">
+           <!--                     <button id="start-charging-btn" class="btn btn-primary text-center" type="button">
+                                    <i class="bi bi-lightning-charge"></i>&nbsp;Start
+                                </button>-->
+                                <button id="stop-charging-btn" class="btn btn-danger text-center" type="button">
+                                    <i class="bi bi-lightning-charge"></i>&nbsp;Stop
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Charging History -->
-                    <div class="row">
-                        <div class="col-12 py-1">
+                        <!-- Charging History -->
+                        <div class="col-xxl-9 col-xl-9 col-lg-9 col-md-12 col-sm-12 py-1">
                             <div class="card text-muted">
                                 <div class="card-header">Charging history</div>
                                 <div class="card-body table-responsive">
-                                    <table class="table">
+                                    <table class="table table-sm">
                                         <thead>
                                         <tr>
                                             <th>Date</th>
@@ -274,7 +283,7 @@
                                             <th>Description</th>
                                         </tr>
                                         </thead>
-                                        <tbody id="charging-history-body" class="table-group-divider">
+                                        <tbody id="charging-history-body" class="table-group-divider texted-muted" style="font-size: small">
                                         <!-- Transactions will be rendered here -->
                                         </tbody>
                                     </table>

@@ -121,9 +121,8 @@ export class ChargingManager {
                 <td>${tx.idTag}</td>
                 <td>${tx.chargeBoxId}</td>
                 <td>${tx.connectorId}</td>
-                <td>${tx.connectorId}</td>
                 <td>${tx.consumedUnits}</td>
-                <td>RWF ${tx.totalAmount}</td>
+                <td>${utils.toRwf.format(tx.totalAmount)}</td>
                 <td>${tx.location}</td>
                 <td>${tx.stopReason}</td>
             </tr>`;

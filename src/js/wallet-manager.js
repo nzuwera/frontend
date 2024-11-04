@@ -108,7 +108,7 @@ export class WalletManager {
                                                 <span style="font-weight: bold">${user_details.fullName}</span>
                                                 <span class="text-muted" style="font-size: small;">${account.accountNumber}</span> 
                                             </div>
-                                            <div class="d-flex flex-column gap-1">
+                                            <div class="d-flex flex-column">
                                                 <span class="text-muted mb-1" style="font-size: xx-small">Current balance</span>
                                                 <span style="font-size: large;">${utils.toRwf.format(account.accountBalance)}</span> 
                                             </div>

@@ -16,7 +16,10 @@ export class ReservationManager {
     properties = {
         form: document.getElementById('reservation-form'),
         cancelReservationBtn: document.getElementById('cancel-reservation-btn'),
-        countdownBox: document.getElementById('countdown')
+        countdownBox: document.getElementById('countdown'),
+        countdouwnHr: document.getElementById("hours"),
+        countdouwnMin: document.getElementById("minutes"),
+        countdouwnSec: document.getElementById("seconds"),
     }
 
     handlers = () => {
@@ -62,7 +65,9 @@ export class ReservationManager {
                         if (reservationNotification.status == 'Accepted') {
                             countdown = new Countdown(local_storage.get('reservation-startTime'), local_storage.get('reservation-expiredDate'));
                             countdown.start((time) => {
-                                reservation.properties.countdownBox.innerHTML = `Remaining time: ${time}`;
+                                reservation.properties.countdouwnHr.innerHTML = `${time.hr}`;
+                                reservation.properties.countdouwnMin.innerHTML = `${time.min}`;
+                                reservation.properties.countdouwnSec.innerHTML = `${time.sec}`;
                             });
                             // Activate Cancel button
                             document.getElementById('cancel-reservation-btn').classList.remove('d-none')
