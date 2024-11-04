@@ -3,6 +3,7 @@ CONTAINER_NAME=$1
 
 # Create dist folder if not exists
 [ -d dist ] || mkdir dist
+rm -rf dist/*
 cp -rf src/* dist/
 # Build docker image
 docker stop "${CONTAINER_NAME}"

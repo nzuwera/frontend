@@ -1,6 +1,7 @@
 import {apiUrls} from "./api-urls.js";
 import {HttpManager} from "./http-manager.js";
 import {WalletManager} from "./wallet-manager.js";
+import {ChargingManager} from "./charging-manager.js";
 import {Utils} from "./utils.js";
 import {stompJs} from "./sockets-manager.js";
 import {socketsTopics} from "./sockets-topics.js";
@@ -9,9 +10,10 @@ const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
 const walletManager = new WalletManager();
-
+const chargingManager = new ChargingManager();
 const content_wrapper = document.getElementById('content-wrapper');
 const responseMessage = document.getElementById('responseMessage');
+const tabNavigationLinks = document.getElementById('tab-navigation-links');
 
 export class AuthManager {
 
@@ -104,13 +106,18 @@ export class AuthManager {
     }
 
     init() {
-        console.log("Init started")
-        walletManager.renderUserProfile()
-        walletManager.getWalletAccount()
-        walletManager.loadTransactions(0)
-        this.displayContent()
-        stompJs.activate();
-        console.log("Init End")
+        try {
+            console.log("Init started")
+            walletManager.renderUserProfile()
+            walletManager.getWalletAccount()
+            walletManager.loadTransactions(0)
+            chargingManager.handlers().loadTransactions(0)
+            this.displayContent()
+            stompJs.activate();
+            console.log("Init End")
+        }catch (error){
+            console.error(error)
+        }
     }
 
     logout() {
@@ -163,11 +170,20 @@ export class AuthManager {
                     connect_div.classList.remove('d-none');
                     console.log("Login DIV hidden")
                 }
+                // Show tab navigation links
+                if (tabNavigationLinks.classList.contains('d-none')){
+                    tabNavigationLinks.classList.remove('d-none')
+                }
 
             },
             hide_logged_content: () => {
                 // Hide connect DIV
                 connect_div.classList.add('d-none');
+
+                // Hide tab navigation links
+                tabNavigationLinks.classList.add('d-none')
+
+                // Remove
                 if (login_div.classList.contains('d-none')) {
                     login_div.classList.remove('d-none');
                     console.log("Login DIV shown")
