@@ -4,7 +4,7 @@
   "main": "index.html",
   "type": "module",
   "scripts": {
-    "build-run": "./build.sh frontend"
+    "dev": "serve src"
   },
   "keywords": [],
   "author": "nzuwera",
