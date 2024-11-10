@@ -1,13 +1,9 @@
 export class Utils {
     constructor() {
+        this.errorResponse = document.getElementById('responseMessage')
     }
 
-    toRwf = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'RWF',
-    });
-
-    showAlert = (message, type, alertPlaceholder, duration = 15000) => {
+    showAlert = (message, type, duration = 15000) => {
         // Create the alert HTML content
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;
@@ -18,17 +14,13 @@ export class Utils {
     `;
 
         // Append the alert to the placeholder
-        alertPlaceholder.appendChild(alert);
+        this.errorResponse.appendChild(alert);
 
         // Auto-dismiss the alert after the specified duration
         setTimeout(() => {
             alert.classList.remove('show');
             alert.addEventListener('transitionend', () => alert.remove());
         }, duration);
-    }
-
-    onBtnClick = (btn, callback) => {
-        btn.addEventListener('click', callback)
     }
 
     storage = () => {
