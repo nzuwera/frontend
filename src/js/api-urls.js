@@ -26,14 +26,5 @@ export const apiUrls = {
     },
     customerReservationsUrl: function (customerId) {
         return `${this.baseURL}/reservations/get/${customerId}`
-    },
-    startCharging: function (reservationId) {
-        return `${this.baseURL}/charging/start/${reservationId}`
-    },
-    stopCharging: function (reservationId) {
-        return `${this.baseURL}/charging/stop/${reservationId}`
-    },
-    chargingHistory: function (username) {
-        return `${this.baseURL}/charging/history/${username}`
     }
 }

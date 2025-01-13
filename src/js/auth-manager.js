@@ -1,82 +1,139 @@
 import {apiUrls} from "./api-urls.js";
 import {HttpManager} from "./http-manager.js";
+import {WalletManager} from "./wallet-manager.js";
 import {Utils} from "./utils.js";
-import socketManager from "./sockets-manager.js";
+import {stompJs} from "./sockets-manager.js";
+import {socketsTopics} from "./sockets-topics.js";
 
 const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
+const walletManager = new WalletManager();
 
-// Constants
-const userNotifications = document.getElementById('user-notifications');
+const content_wrapper = document.getElementById('content-wrapper');
+const responseMessage = document.getElementById('responseMessage');
 
 export class AuthManager {
+
     constructor() {
-        this.jwt_token = null;
     }
 
-    login(e) {
-
-        e.preventDefault();
-        e.stopPropagation();
-        // Get login form data
-        const loginRequest = Object.fromEntries(new FormData(e.target));
-        console.log(loginRequest)
-        // Authentication
+    login(username, password) {
         const authManager = this
-        http.httpPost(apiUrls.authUrl(), loginRequest).then((data) => {
-            this.jwt_token = data.jwt;
-            local_storage.set("token", data.jwt)
+        const loginResponse = http.httpPost(apiUrls.authUrl(), {
+            username: username,
+            password: password
+        }).then(function (success) {
+            console.log(success)
+            local_storage.set("token", success.jwt)
+            local_storage.set("refreshToken", success.refreshToken)
+            local_storage.set("user-profile", utils.decodeJwt(success.jwt))
             local_storage.set("logged-in", true)
             authManager.init();
+            authManager.initStomp();
         }).catch(function (error) {
-            console.log(`Login error - ${error}`)
-            utils.showAlert(`${error}`, 'danger')
+            console.log(`Login failed - ${error}`)
             return false;
         }).finally(() => {
-            console.info("Authentication process completed")
+            console.info("Logged in successfully")
         })
     }
 
-    initSocket() {
-        socketManager.initialize();
-        socketManager.connect();
+    initStomp() {
+        stompJs.onConnect = (frame) => {
+            let phone = JSON.parse(local_storage.get("user-profile")).phoneNumber;
+            console.log('Connected: ' + frame);
+            // Subscribe to walletBalance
+            console.log('Wallet Account: ' + phone);
+
+
+            // Subscribe to walletTransactions
+            stompJs.subscribe(socketsTopics.walletTransaction, function (walletTransactions) {
+                console.log(walletTransactions)
+                // called when the client receives a STOMP message from the server
+                if (walletTransactions.body) {
+                    console.info('got walletTransactions message with body ' + walletTransactions.body);
+                    walletManager.loadTransactions(0)
+                } else {
+                    alert('got empty walletTransactions message');
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});
+
+            // Subscribe to user errors
+            stompJs.subscribe(socketsTopics.userError, function (userErrors) {
+                console.log(userErrors)
+                // called when the client receives a STOMP message from the server
+                if (userErrors.body) {
+                    utils.showAlert(`got userErrors message with body ${userErrors.body}`, 'danger', responseMessage);
+                } else {
+                    utils.showAlert('got empty userErrors message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});
+
+            // Subscribe to reservation messages
+/*            stompJs.subscribe(socketsTopics.reservation, function (reservations) {
+                console.log(reservations)
+                // called when the client receives a STOMP message from the server
+                if (reservations.body) {
+                    utils.showAlert(`got reservation message with body ${reservations.body}`, 'success', responseMessage);
+                } else {
+                    utils.showAlert('got empty reservation message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});*/
+
+            // Subscribe to chargingSession messages
+ /*           stompJs.subscribe(socketsTopics.chargingSession, function (reservations) {
+                console.log(reservations)
+                // called when the client receives a STOMP message from the server
+                if (reservations.body) {
+                    utils.showAlert(`got chargingSession message with body ${reservations.body}`, 'success', responseMessage);
+                } else {
+                    utils.showAlert('got empty chargingSession message', 'danger', responseMessage);
+                }
+            }, {"Authorization": `Bearer ${local_storage.get('token')}`});*/
+        };
+
+        stompJs.onWebSocketError = (error) => {
+            utils.showAlert(`Error with websocket ${error}`, 'danger', responseMessage);
+        };
+
+        stompJs.onStompError = (frame) => {
+            console.error('Broker reported error: ' + frame.headers['message']);
+            console.error('Additional details: ' + frame.body);
+        };
     }
 
     init() {
-        try {
-            console.log("Init started")
-            this.displayContent()
-            this.initSocket()
-            console.log("Init End")
-        } catch (error) {
-            console.error(error)
-        }
+        console.log("Init started")
+        walletManager.renderUserProfile()
+        walletManager.getWalletAccount()
+        walletManager.loadTransactions(0)
+        this.displayContent()
+        stompJs.activate();
+        console.log("Init End")
     }
 
-    logout(ev) {
-        ev.preventDefault()
-        ev.stopPropagation()
+    logout() {
         const authManager = this
-        const loginResponse = http.httpGet(apiUrls.logoutUrl(), this.jwt_token)
+        const loginResponse = http.httpGet(apiUrls.logoutUrl(), local_storage.get('token'))
         loginResponse.then(function (success) {
             console.log(success)
             authManager.resetAll()
         }).catch(function (error) {
-            utils.showAlert(`Logout failed - ${error}`, 'danger')
-        }).finally(() => {
+            utils.showAlert(`Logout failed - ${error}`, 'danger', responseMessage)
+        }).finally(function (e) {
             console.info("Logout processed successfully");
         })
     }
 
     resetAll() {
-        socketManager.disconnect();
+        stompJs.deactivate();
         local_storage.empty()
         this.toggleLoginDiv().hide_logged_content()
     }
 
     refreshToken() {
-        const refreshResponse = http.httpGet(apiUrls.logoutUrl(), this.jwt_token)
+        const refreshResponse = http.httpGet(apiUrls.logoutUrl(), local_storage.get('token'))
         refreshResponse.then(function (success) {
             local_storage.set("token", success.jwt)
             local_storage.set("refreshToken", success.refreshToken)
@@ -89,6 +146,9 @@ export class AuthManager {
 
 
     displayContent() {
+        if (content_wrapper.classList.contains('d-none')) {
+            content_wrapper.classList.remove('d-none');
+        }
         this.toggleLoginDiv().show_logged_content();
     }
 
@@ -103,20 +163,18 @@ export class AuthManager {
                     connect_div.classList.remove('d-none');
                     console.log("Login DIV hidden")
                 }
-                if (userNotifications.classList.contains('d-none')) {
-                    userNotifications.classList.remove('d-none');
-                }
 
             },
             hide_logged_content: () => {
                 // Hide connect DIV
                 connect_div.classList.add('d-none');
-                userNotifications.classList.add('d-none');
-
-                // Remove
                 if (login_div.classList.contains('d-none')) {
                     login_div.classList.remove('d-none');
                     console.log("Login DIV shown")
+                }
+                if (!content_wrapper.classList.contains('d-none')) {
+                    content_wrapper.classList.add('d-none')
+                    console.log("Content wrapper hidden")
                 }
             }
         }
