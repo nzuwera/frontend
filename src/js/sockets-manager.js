@@ -27,53 +27,36 @@ class SocketManager {
                     console.log("Connected: ", frame);
 
                     // subscribe to wallet-notification
-                    this.subscribe(socketsTopics.userWalletBalance, (message) => {
-                        if (document.getElementById('wallet-notification').innerHTML.trim() === "") {
-                            document.getElementById('wallet-notification').prepend(message);
-                        } else {
-                            document.getElementById('wallet-notification').prepend(document.createElement('hr'));
-                            document.getElementById('wallet-notification').prepend(message);
-                        }
-                    })
+                    this.subscribe(socketsTopics.userWalletBalance, message => this.handleStompCallbacks(message, 'wallet-notification'))
 
                     // subscribe to reservation-notification
-                    this.subscribe(socketsTopics.reservation, (message) => {
-                        if (document.getElementById('reservation-notification').innerHTML.trim() === "") {
-                            document.getElementById('reservation-notification').prepend(message);
-                        } else {
-                            document.getElementById('reservation-notification').prepend(document.createElement('hr'));
-                            document.getElementById('reservation-notification').prepend(message);
-                        }
-                    })
+                    this.subscribe(socketsTopics.reservation, message => this.handleStompCallbacks(message, 'reservation-notification'))
 
                     // subscribe to status-notification
-                    this.subscribe(socketsTopics.connectStatus, (message) => {
-                        if (document.getElementById('status-notification').innerHTML.trim() === "") {
-                            document.getElementById('status-notification').prepend(message);
-                        } else {
-                            document.getElementById('status-notification').prepend(document.createElement('hr'));
-                            document.getElementById('status-notification').prepend(message);
-                        }
-                    })
+                    this.subscribe(socketsTopics.connectStatus, message => this.handleStompCallbacks(message, 'status-notification'))
 
                     // subscribe to charging-notification
-                    this.subscribe(socketsTopics.chargingSession, (message) => {
-                        if (document.getElementById('charging-notification').innerHTML.trim() === "") {
-                            document.getElementById('charging-notification').prepend(message);
-                        } else {
-                            document.getElementById('charging-notification').prepend(document.createElement('hr'));
-                            document.getElementById('charging-notification').prepend(message);
-                        }
-                    })
+                    this.subscribe(socketsTopics.chargingSession, message => this.handleStompCallbacks(message, 'charging-notification'))
                 },
                 onStompError: (frame) => {
-                    console.error("STOMP Error: ", frame.headers["message"]);
+                    this.handleError(frame.headers["message"]);
                 },
                 debug: (str) => {
                     console.debug(str); // Optional debugging output
                 },
             });
         }
+    }
+
+    handleStompCallbacks(message, selector) {
+        return (message) => {
+            if (document.getElementById(selector).innerHTML.trim() === "") {
+                document.getElementById(selector).prepend(message);
+            } else {
+                document.getElementById(selector).prepend(document.createElement('hr'));
+                document.getElementById(selector).prepend(message);
+            }
+        };
     }
 
 // Connect to the WebSocket server
@@ -93,12 +76,11 @@ class SocketManager {
 // Disconnect from the WebSocket server
     disconnect() {
         if (this.stompClient) {
-            for (let topic in this.subscriptions.keys()) {
+            for (let topic of this.subscriptions.keys()) {
                 this.unsubscribe(topic)
             }
-            this.stompClient.deactivate();
+            this.stompClient.deactivate()
             console.log("Disconnected from WebSocket server.");
-
         }
     }
 
@@ -122,7 +104,7 @@ class SocketManager {
 // Unsubscribe from a topic
     unsubscribe(topic) {
         if (this.subscriptions.has(topic)) {
-            this.subscriptions.get(topic).unsubscribe();
+            this.stompClient.unsubscribe(topic);
             this.subscriptions.delete(topic);
             console.log(`Unsubscribed from topic: ${topic}`);
         } else {
