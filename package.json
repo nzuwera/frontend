@@ -4,13 +4,15 @@
   "main": "index.html",
   "type": "module",
   "scripts": {
-    "dev": "serve src"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "nzuwera",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "serve": "^14.2.4"
+    "vite": "^7.1.10"
   }
 }
