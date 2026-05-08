@@ -42,8 +42,17 @@ export class HttpManager {
         return this.httpRequest("POST", url, payload, jwt);
     }
 
+    async httpDelete(url, payload = null, jwt = null) {
+        return this.httpRequest("DELETE", url, payload, jwt);
+    }
+
     async login(username, password) {
-        const url = "/auth/token";
+        const url = "/auth/login";
         return this.httpPost(url, { username, password });
+    }
+
+    async logout(accessToken,refreshToken) {
+        const url = "/auth/logout";
+        return this.httpPost(url, { refreshToken: refreshToken }, accessToken);
     }
 }

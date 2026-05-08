@@ -1,39 +1,27 @@
 export const apiUrls = {
-    baseURL: "http://localhost:8181/app-api/v1",
+    baseURL: "https://api.safaricharger.local",
     authUrl: function () {
-        return `${this.baseURL}/auth/token`
+        return `${this.baseURL}/auth/login`
     },
-    refreshTokenUrl: function () {
-        return `${this.baseURL}/auth/refresh`
+    selectContextUrl: function () {
+        return `${this.baseURL}/auth/select-context`
     },
     logoutUrl: function () {
-        return `${this.baseURL}/logout`
+        return `${this.baseURL}/auth/logout`
     },
-    walletUrl: function (customerId) {
-        return `${this.baseURL}/wallets/get/${customerId}`
+    walletMeUrl: function () {
+        return `${this.baseURL}/payment/wallets/me`
     },
-    walletTopUpUrl: function () {
-        return `${this.baseURL}/wallets/top-up`
+    walletRecentTxnsUrl: function (accountNumber) {
+        return `${this.baseURL}/payment/wallets/accounts/${accountNumber}/transactions/recents`
     },
-    walletHistoryUrl: function (account) {
-        return `${this.baseURL}/wallets/history/${account}`
+    reservationsUrl: function () {
+        return `${this.baseURL}/csms/app/reservations`
     },
-    createReservationUrl: function () {
-        return `${this.baseURL}/reservations/create`
+    chargingStartUrl: function (reservationId) {
+        return `${this.baseURL}/csms/app/charging/start/${reservationId}`
     },
-    cancelReservationUrl: function () {
-        return `${this.baseURL}/reservations/cancel`
-    },
-    customerReservationsUrl: function (customerId) {
-        return `${this.baseURL}/reservations/get/${customerId}`
-    },
-    startCharging: function (reservationId) {
-        return `${this.baseURL}/charging/start/${reservationId}`
-    },
-    stopCharging: function (reservationId) {
-        return `${this.baseURL}/charging/stop/${reservationId}`
-    },
-    chargingHistory: function (username) {
-        return `${this.baseURL}/charging/history/${username}`
+    chargingStopUrl: function (reservationId) {
+        return `${this.baseURL}/csms/app/charging/stop/${reservationId}`
     }
 }

@@ -1,85 +1,66 @@
-# Frontend Project
+# SafariCharger WebSocket Monitor
 
-A modern frontend web application built with vanilla JavaScript and powered by Vite for an optimized development experience.
-
-## Features
-
-- ⚡️ Lightning-fast development with Vite 5
-- 🔥 Hot Module Replacement (HMR)
-- 📦 Optimized production builds
-- 🎯 ES Modules support
+Real-time WebSocket notification dashboard for the SafariCharger platform. Connects to a STOMP broker and displays live events for wallet balance, reservations, charger status, and charging sessions.
 
 ## Prerequisites
 
-- Node.js (version 14.18+ or 16+)
-- npm (comes with Node.js)
+- Node.js 18+
+- npm
+- Running SafariCharger backend at `https://api.safaricharger.com` (or update `baseURL` in `src/js/api-urls.js`)
 
-## Getting Started
+## Setup
 
-### Installation
-
-1. Clone the repository:
-
-```shell
-git clone <repository-url> cd frontend
-```
-
-2. Install dependencies:
 ```shell
 npm install
 ```
 
-### Development
+## Development
 
-Start the development server:
 ```shell
 npm run dev
 ```
 
-The application will automatically open in your browser at `http://localhost:3000`
+App runs at `http://localhost:5173`.
 
-### Build
+## Production Build
 
-Create a production build:
 ```shell
 npm run build
-```
-
-The optimized files will be generated in the `dist` directory.
-
-### Preview
-
-Preview the production build locally:
-```shell
+# preview build locally
 npm run preview
 ```
 
+Output goes to `dist/`.
+
+## Configuration
+
+| Variable | File | Description |
+| --- | --- | --- |
+| `baseURL` | `src/js/api-urls.js` | Backend API base URL |
+| `wsUrl` | `src/js/index.js` | WebSocket broker URL |
+
 ## Project Structure
-```
+
+```text
 frontend/
 ├── src/
-│   ├── css/              # Stylesheets
-│   ├── js/               # JavaScript modules
-│   ├── img/              # Images and assets
-│   └── index.html        # Main HTML file
-├── package.json          # Project dependencies and scripts
-├── vite.config.js        # Vite configuration
-└── README.md             # Project documentation
+│   ├── css/          # Custom styles
+│   ├── img/          # Static assets
+│   ├── js/
+│   │   ├── api-urls.js   # API endpoint definitions
+│   │   └── index.js      # App logic (login, STOMP, notifications)
+│   └── index.html    # Entry point
+├── package.json
+└── vite.config.js
 ```
 
-## Scripts
+## Features
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-
-## Technologies
-
-- [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-
+- JWT login / logout with error feedback
+- STOMP WebSocket subscriptions (wallet, reservation, charger status, charging session)
+- Chronological notification cards with timestamps (capped at 100 entries each)
+- Live STOMP message log panel (capped at 200 lines, auto-scroll)
+- Responsive layout (stacks to 1 column on mobile)
 
 ## License
 
