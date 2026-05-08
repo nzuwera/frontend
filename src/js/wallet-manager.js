@@ -6,9 +6,13 @@ const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
 
+const ICON_BOLT = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+const ICON_PLUS = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+
 class WalletManager {
   constructor() {
     this.accountNumber = null;
+    this.lastTxnCount = 0;
   }
 
   getToken() {
@@ -57,31 +61,66 @@ class WalletManager {
     set("wallet-account-number", w.accountNumber);
     set("wallet-account-balance", this.formatAmount(w.accountBalance));
     set("wallet-owner-email", w.ownerEmail);
+
     const status = document.getElementById("wallet-active");
     if (status) {
-      status.textContent = w.active ? "ACTIVE" : "INACTIVE";
-      status.className = `badge ${w.active ? "bg-success" : "bg-secondary"}`;
+      status.innerHTML = `<span class="dot"></span>${w.active ? "Active" : "Inactive"}`;
+      status.className = `badge ${w.active ? "pos" : "muted"}`;
     }
+
+    this.updateStatusTile(w.accountBalance);
   }
 
   renderTransactions(txns) {
-    const tbody = document.getElementById("wallet-txn-tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
+    const list = document.getElementById("wallet-txn-list");
+    if (!list) return;
+    list.innerHTML = "";
     if (!txns.length) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-muted text-center">No transactions</td></tr>`;
+      list.innerHTML = `<div class="empty-mini">No transactions yet.</div>`;
+      this.updateTxTile(0);
       return;
     }
     for (const t of txns.slice(0, 5)) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="text-end">${this.formatAmount(t.transactedAmount)}</td>
-        <td><span class="badge ${t.type === "CREDIT" ? "bg-success" : "bg-warning text-dark"}">${this.escape(t.type)}</span></td>
-        <td>${this.escape(t.status)}</td>
-        <td><small class="text-muted">${this.escape(t.createdAt)}</small></td>
+      const isCredit = String(t.type).toUpperCase() === "CREDIT";
+      const cls = isCredit ? "credit" : "debit";
+      const sign = isCredit ? "+" : "−";
+      const icon = isCredit ? ICON_PLUS : ICON_BOLT;
+      const label = this.deriveLabel(t);
+      const sub = `${this.timeAgo(t.createdAt)} · ${this.escape(String(t.status ?? "").toUpperCase())}`;
+
+      const row = document.createElement("div");
+      row.className = "tx-row";
+      row.innerHTML = `
+        <div class="tx-icon ${cls}">${icon}</div>
+        <div class="tx-meta">
+          <div class="tx-title">${this.escape(label)}</div>
+          <div class="tx-sub">${sub}</div>
+        </div>
+        <div class="tx-amt ${cls}">${sign}${this.formatAmount(t.transactedAmount)}</div>
       `;
-      tbody.appendChild(tr);
+      list.appendChild(row);
     }
+    this.updateTxTile(txns.length);
+  }
+
+  deriveLabel(t) {
+    if (t.label) return t.label;
+    if (t.description) return t.description;
+    const type = String(t.type ?? "").toUpperCase();
+    if (type === "CREDIT") return `Wallet top-up${t.method ? ` · ${t.method}` : ""}`;
+    if (t.chargeBoxId) return `Charging session · ${t.chargeBoxId}`;
+    return "Wallet transaction";
+  }
+
+  updateStatusTile(balance) {
+    const tile = document.querySelector("#tile-wallet .v");
+    if (tile) tile.textContent = `${this.formatAmount(balance)} RWF`;
+  }
+
+  updateTxTile(count) {
+    this.lastTxnCount = count;
+    const tile = document.querySelector("#tile-wallet-tx .v");
+    if (tile) tile.textContent = count > 0 ? `${count} recent` : "Idle";
   }
 
   formatAmount(v) {
@@ -89,6 +128,19 @@ class WalletManager {
     const n = Number(v);
     if (Number.isNaN(n)) return String(v);
     return n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  timeAgo(iso) {
+    if (!iso) return "—";
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) return this.escape(String(iso));
+    const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
   }
 
   escape(v) {
@@ -100,17 +152,22 @@ class WalletManager {
 
   reset() {
     this.accountNumber = null;
+    this.lastTxnCount = 0;
     ["wallet-account-number", "wallet-account-balance", "wallet-owner-email"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.textContent = "—";
     });
     const status = document.getElementById("wallet-active");
     if (status) {
-      status.textContent = "—";
-      status.className = "badge bg-secondary";
+      status.innerHTML = `<span class="dot"></span>—`;
+      status.className = "badge muted";
     }
-    const tbody = document.getElementById("wallet-txn-tbody");
-    if (tbody) tbody.innerHTML = "";
+    const list = document.getElementById("wallet-txn-list");
+    if (list) list.innerHTML = `<div class="empty-mini">No transactions yet.</div>`;
+    const tileV = document.querySelector("#tile-wallet .v");
+    if (tileV) tileV.textContent = "—";
+    const tileTx = document.querySelector("#tile-wallet-tx .v");
+    if (tileTx) tileTx.textContent = "Idle";
   }
 }
 

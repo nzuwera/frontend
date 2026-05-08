@@ -10,9 +10,9 @@ const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
 
-const userNotifications = document.getElementById('user-notifications');
-const walletSection = document.getElementById('wallet-section');
-const reservationChargingSection = document.getElementById('reservation-charging-section');
+const dashboard = () => document.getElementById('dashboard');
+const loginDiv = () => document.getElementById('login-div');
+const connectDiv = () => document.getElementById('connect-div');
 
 export class AuthManager {
     constructor() {}
@@ -61,6 +61,7 @@ export class AuthManager {
     init() {
         try {
             this.displayContent();
+            this.populateUserChip();
             this.initSocket();
             walletManager.init();
             reservationManager.init();
@@ -68,6 +69,39 @@ export class AuthManager {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    populateUserChip() {
+        const token = local_storage.get("token");
+        if (!token) return;
+        let email = "—";
+        try {
+            const payload = JSON.parse(utils.decodeJwt(token));
+            email = payload.email ?? payload.sub ?? payload.preferred_username ?? "—";
+        } catch (e) {
+            console.warn("Could not decode JWT", e);
+        }
+
+        const namePart = email.split("@")[0] || email;
+        const initials = (namePart.match(/[a-zA-Z0-9]/g) || ["U"])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+        set("user-avatar", initials);
+        set("user-name", namePart);
+        set("user-email", email);
+    }
+
+    clearUserChip() {
+        ["user-avatar", "user-name", "user-email"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = "—";
+        });
     }
 
     async logout(ev) {
@@ -90,9 +124,11 @@ export class AuthManager {
     resetAll() {
         socketManager.disconnect();
         socketManager.clearNotifications();
+        socketManager.setWsState("disconnected");
         walletManager.reset();
         reservationManager.reset();
         chargingManager.reset();
+        this.clearUserChip();
         local_storage.empty();
         this.toggleLoginDiv().hide_logged_content();
     }
@@ -102,22 +138,16 @@ export class AuthManager {
     }
 
     toggleLoginDiv = () => {
-        const login_div = document.getElementById("login-div");
-        const connect_div = document.getElementById("connect-div");
         return {
             show_logged_content: () => {
-                login_div.classList.add('d-none');
-                connect_div.classList.remove('d-none');
-                userNotifications.classList.remove('d-none');
-                if (walletSection) walletSection.classList.remove('d-none');
-                if (reservationChargingSection) reservationChargingSection.classList.remove('d-none');
+                loginDiv()?.classList.add('hidden');
+                connectDiv()?.classList.remove('hidden');
+                dashboard()?.classList.remove('hidden');
             },
             hide_logged_content: () => {
-                connect_div.classList.add('d-none');
-                userNotifications.classList.add('d-none');
-                if (walletSection) walletSection.classList.add('d-none');
-                if (reservationChargingSection) reservationChargingSection.classList.add('d-none');
-                login_div.classList.remove('d-none');
+                connectDiv()?.classList.add('hidden');
+                dashboard()?.classList.add('hidden');
+                loginDiv()?.classList.remove('hidden');
             }
         };
     }

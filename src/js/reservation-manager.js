@@ -7,9 +7,15 @@ const utils = new Utils();
 const local_storage = utils.storage();
 const http = new HttpManager();
 
+const ICON_PLAY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
+const ICON_X = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const ICON_INBOX = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>`;
+
 class ReservationManager {
   constructor() {
     this.active = null;
+    this._delegated = false;
+    this._chargingActive = false;
   }
 
   getToken() {
@@ -18,11 +24,27 @@ class ReservationManager {
 
   init() {
     const form = document.getElementById("reservation-form");
-    const cancelBtn = document.getElementById("cancel-reservation-btn");
     if (form) form.onsubmit = (e) => this.onCreate(e);
-    if (cancelBtn) cancelBtn.onclick = () => this.onCancel();
+
+    if (!this._delegated) {
+      const list = document.getElementById("reservation-list");
+      if (list) {
+        list.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-action]");
+          if (!btn) return;
+          const action = btn.getAttribute("data-action");
+          if (action === "cancel") this.onCancel();
+          else if (action === "start") {
+            document.dispatchEvent(new CustomEvent("reservation:startRequested"));
+          }
+        });
+      }
+      this._delegated = true;
+    }
 
     document.addEventListener("stomp:reservation", (e) => this.onReservationNotify(e.detail ?? {}));
+    document.addEventListener("charging:started", () => { this._chargingActive = true; this.renderActive(); });
+    document.addEventListener("charging:stopped", () => { this._chargingActive = false; this.renderActive(); });
   }
 
   async onCreate(e) {
@@ -58,6 +80,8 @@ class ReservationManager {
         id: reservation.id,
         chargeBoxId: reservation.chargeBoxId ?? payload.chargeBoxId,
         connectorId: reservation.connectorId ?? payload.connectorId,
+        plateNumber: reservation.plateNumber ?? payload.plateNumber,
+        currentBatteryLevel: reservation.currentBatteryLevel ?? payload.currentBatteryLevel,
         status,
       };
       socketManager.subscribeReservation();
@@ -111,32 +135,29 @@ class ReservationManager {
       document.dispatchEvent(new CustomEvent("reservation:cleared"));
     }
 
-    this.renderStatus(status);
+    this.renderActive();
   }
 
   setBusy(busy) {
     const createBtn = document.getElementById("create-reservation-btn");
-    const cancelBtn = document.getElementById("cancel-reservation-btn");
     if (createBtn) createBtn.disabled = busy;
-    if (cancelBtn) cancelBtn.disabled = busy || !this.active;
   }
 
   setCreated() {
     const createBtn = document.getElementById("create-reservation-btn");
-    const cancelBtn = document.getElementById("cancel-reservation-btn");
     if (createBtn) createBtn.disabled = true;
-    if (cancelBtn) cancelBtn.disabled = false;
     this.toggleFormDisabled(true);
+    this.renderActive();
+    this.updateTile();
   }
 
   clearActive() {
     this.active = null;
     const createBtn = document.getElementById("create-reservation-btn");
-    const cancelBtn = document.getElementById("cancel-reservation-btn");
     if (createBtn) createBtn.disabled = false;
-    if (cancelBtn) cancelBtn.disabled = true;
     this.toggleFormDisabled(false);
-    this.renderStatus("—");
+    this.renderActive();
+    this.updateTile();
   }
 
   toggleFormDisabled(disabled) {
@@ -145,28 +166,89 @@ class ReservationManager {
     form.querySelectorAll("input").forEach((el) => (el.disabled = disabled));
   }
 
-  renderStatus(status) {
-    const el = document.getElementById("reservation-status");
-    if (!el) return;
-    el.textContent = status ?? "—";
-    el.className = "badge " + this.statusBadge(status);
+  renderActive() {
+    const list = document.getElementById("reservation-list");
+    if (!list) return;
+    if (!this.active) {
+      list.innerHTML = `
+        <div class="reservation-card empty">
+          <div class="e-icon">${ICON_INBOX}</div>
+          <div class="e-t">No active reservation</div>
+          <div class="e-s">Submit the form above to hold a connector.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const r = this.active;
+    const badge = this.statusBadge(r.status);
+    const startDisabled = r.status !== "Accepted" || this._chargingActive;
+    const startNote = this._chargingActive
+      ? `<div class="res-note">Stop the active session to start a new one.</div>`
+      : (r.status !== "Accepted"
+          ? `<div class="res-note">Waiting for charger acceptance…</div>`
+          : "");
+
+    list.innerHTML = `
+      <div class="reservation-card">
+        <div class="res-top">
+          <div class="res-id">
+            <small>Reservation</small>
+            ${this.escape(String(r.id))}
+          </div>
+          <span class="badge ${badge.cls}"><span class="dot"></span>${badge.label}</span>
+        </div>
+        <div class="res-grid">
+          <div class="res-cell"><div class="k">Charge Box</div><div class="v">${this.escape(r.chargeBoxId)}</div></div>
+          <div class="res-cell"><div class="k">Conn.</div><div class="v">#${this.escape(String(r.connectorId))}</div></div>
+          <div class="res-cell"><div class="k">Battery</div><div class="v">${this.escape(String(r.currentBatteryLevel ?? "—"))}%</div></div>
+          <div class="res-cell"><div class="k">Plate</div><div class="v">${this.escape(r.plateNumber ?? "—")}</div></div>
+          <div class="res-cell"><div class="k">Status</div><div class="v">${this.escape(r.status ?? "—")}</div></div>
+          <div class="res-cell"><div class="k">ID</div><div class="v" style="font-size:11px">${this.escape(String(r.id))}</div></div>
+        </div>
+        <div class="res-actions">
+          <button class="btn-sm start" id="start-charging-btn" data-action="start" ${startDisabled ? "disabled" : ""}>
+            ${ICON_PLAY} Start charging session
+          </button>
+          <button class="btn-sm cancel" id="cancel-reservation-btn" data-action="cancel">
+            ${ICON_X} Cancel
+          </button>
+        </div>
+        ${startNote}
+      </div>
+    `;
   }
 
   statusBadge(status) {
     switch (status) {
-      case "Accepted": return "bg-success";
-      case "Pending": return "bg-info text-dark";
+      case "Accepted": return { cls: "pos", label: "Accepted" };
+      case "Pending":  return { cls: "info", label: "Pending" };
       case "Cancelled":
       case "Expired":
-      case "Deleted": return "bg-secondary";
+      case "Deleted":  return { cls: "muted", label: status };
       case "Faulted":
-      case "Unavailable": return "bg-danger";
-      default: return "bg-secondary";
+      case "Unavailable": return { cls: "neg", label: status };
+      default: return { cls: "muted", label: status ?? "—" };
     }
+  }
+
+  updateTile() {
+    const tile = document.querySelector("#tile-reservations .v");
+    if (tile) tile.textContent = this.active ? "1 held" : "None";
+    const count = document.getElementById("reservation-count");
+    if (count) count.textContent = `${this.active ? 1 : 0} active`;
+  }
+
+  escape(v) {
+    if (v == null) return "";
+    return String(v).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
   }
 
   reset() {
     this.active = null;
+    this._chargingActive = false;
     const form = document.getElementById("reservation-form");
     if (form) form.reset();
     this.clearActive();

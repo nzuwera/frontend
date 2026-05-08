@@ -1,210 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <title>SafariCharger WebSocket Monitor</title>
-    <link rel="icon" href="img/house-gear.svg" type="image/svg+xml">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="css/custom-style.css">
+  <meta charset="UTF-8" />
+  <title>SafariCharger Monitor</title>
+  <link rel="icon" href="img/house-gear.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="design-system/colors_and_type.css" />
+  <link rel="stylesheet" href="css/custom-style.css" />
 </head>
-
 <body>
-<div class="container-fluid">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary mt-3 mb-3">
-        <div class="container-fluid d-flex justify-content-between">
-            <a class="navbar-brand" href="#">SafariCharger Monitor</a>
 
-            <!-- Login Form -->
-            <div id="login-div">
-                <form id="login-form">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Username" id="username"
-                               name="username" required autofocus>
-                        <input type="password" class="form-control" placeholder="Password" id="password"
-                               name="password" required>
-                        <button type="submit" class="btn btn-primary btn-sm px-4" id="login-btn">Login</button>
-                    </div>
-                </form>
-            </div>
+<div class="app">
 
-            <!-- Connected controls -->
-            <div id="connect-div" class="d-none d-flex align-items-center gap-2">
-                <button class="btn btn-sm btn-danger py-2 px-4" id="logout-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                         class="bi bi-box-arrow-left me-1" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                              d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/>
-                        <path fill-rule="evenodd"
-                              d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/>
-                    </svg>
-                    Logout
-                </button>
+  <!-- ─── Topbar ─────────────────────────────────────────── -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <path d="M16 3 L28 10 L28 22 L16 29 L4 22 L4 10 Z" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M11 20 L16 9 L21 20 M13 16 L19 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name"><strong>Safari</strong><span class="light">Charger</span></div>
+        <div class="brand-sub">Monitor</div>
+      </div>
+      <span class="env-pill">Sandbox</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-meta">
+
+      <!-- Login form (unauthenticated) -->
+      <div id="login-div">
+        <form id="login-form" class="login-inline">
+          <input type="text" placeholder="Username" id="username" name="username" required autofocus />
+          <input type="password" placeholder="Password" id="password" name="password" required />
+          <button type="submit" id="login-btn" class="btn-solid">Login</button>
+        </form>
+      </div>
+
+      <!-- Connected controls -->
+      <div id="connect-div" class="hidden">
+        <span class="ws-pill" id="ws-pill"><span class="dot"></span><span class="ws-text">connecting…</span></span>
+        <span class="user-chip">
+          <span class="avatar" id="user-avatar">—</span>
+          <span class="who">
+            <span id="user-name">—</span>
+            <small id="user-email">—</small>
+          </span>
+        </span>
+        <button class="btn-logout" id="logout-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Page heading ───────────────────────────────────── -->
+  <div class="page-head">
+    <div>
+      <h1>Sandbox <span class="accent">Monitor</span></h1>
+      <div class="sub">Real-time wallet, reservation and charging telemetry</div>
+    </div>
+    <div class="session-meta">
+      <div><span class="k">Region</span> RW · East</div>
+      <div><span class="k">API</span> v1</div>
+      <div><span class="k">Latency</span> <span id="api-latency">—</span></div>
+    </div>
+  </div>
+
+  <!-- Alert / toast placeholder -->
+  <div id="responseMessage" class="toast-stack"></div>
+
+  <!-- ─── Dashboard ──────────────────────────────────────── -->
+  <div id="dashboard" class="hidden">
+
+    <div class="grid">
+
+      <!-- ── Wallet card ── -->
+      <div class="card col-4">
+        <div class="card-head">
+          <div class="left">
+            <div class="card-icon green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/>
+                <path d="M16 14h2"/>
+                <path d="M3 9V7a2 2 0 0 1 2-2h11"/>
+              </svg>
             </div>
+            <div>
+              <div class="card-title">Wallet</div>
+              <div class="card-h">Balance &amp; activity</div>
+            </div>
+          </div>
+          <span class="badge muted" id="wallet-active"><span class="dot"></span>—</span>
         </div>
-    </nav>
+        <hr class="brand-divider" />
 
-    <!-- Alert message box -->
-    <div id="responseMessage" class="mt-3"></div>
-
-    <!-- Wallet section -->
-    <div id="wallet-section" class="w-100 d-none mb-3">
-        <div class="row gy-3">
-            <div class="col-12 col-lg-5">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                        <span>Wallet Account</span>
-                        <span class="badge bg-secondary" id="wallet-active">—</span>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row mb-0 small">
-                            <dt class="col-5 text-muted">Account #</dt>
-                            <dd class="col-7 mb-1" id="wallet-account-number">—</dd>
-                            <dt class="col-5 text-muted">Balance (RWF)</dt>
-                            <dd class="col-7 mb-1 fs-5 fw-semibold" id="wallet-account-balance">—</dd>
-                            <dt class="col-5 text-muted">Owner</dt>
-                            <dd class="col-7 mb-0" id="wallet-owner-email">—</dd>
-                        </dl>
-                    </div>
-                </div>
+        <div class="wallet-hero">
+          <div class="wallet-label">Available balance</div>
+          <div class="wallet-balance">
+            <span class="num" id="wallet-account-balance">—</span>
+            <span class="ccy">RWF</span>
+          </div>
+          <div class="wallet-meta">
+            <div>
+              <span class="k">Account</span>
+              <span class="v" id="wallet-account-number">—</span>
             </div>
-            <div class="col-12 col-lg-7">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Recent Transactions</div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm mb-0 small">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="text-end">Amount</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="wallet-txn-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <div>
+              <span class="k">Owner</span>
+              <span class="v" id="wallet-owner-email">—</span>
             </div>
+          </div>
+          <div class="wallet-actions">
+            <button class="btn-primary" id="wallet-topup-btn" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Top up
+            </button>
+            <button class="btn-ghost-light" id="wallet-statement-btn" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2"/><path d="M8 7h8"/><path d="M8 12h8"/><path d="M8 17h5"/></svg>
+              Statement
+            </button>
+          </div>
         </div>
+
+        <div class="section-label">
+          <span>Recent transactions</span>
+        </div>
+
+        <div class="tx-list" id="wallet-txn-list">
+          <div class="empty-mini">No transactions yet.</div>
+        </div>
+      </div>
+
+      <!-- ── Reservation card ── -->
+      <div class="card col-4">
+        <div class="card-head">
+          <div class="left">
+            <div class="card-icon amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+              </svg>
+            </div>
+            <div>
+              <div class="card-title">Reservation</div>
+              <div class="card-h">Hold a connector</div>
+            </div>
+          </div>
+          <span class="badge muted" id="reservation-count">0 active</span>
+        </div>
+        <hr class="brand-divider" />
+
+        <form id="reservation-form">
+          <div class="form-grid">
+            <div class="field">
+              <label>Charge Box ID</label>
+              <input type="text" name="chargeBoxId" placeholder="e.g. CB-KGL-12" required />
+            </div>
+            <div class="field">
+              <label>Connector</label>
+              <input type="number" name="connectorId" min="1" placeholder="1" required />
+            </div>
+            <div class="field">
+              <label>Plate Number</label>
+              <input type="text" name="plateNumber" placeholder="RAH 482 K" required />
+            </div>
+            <div class="field">
+              <label>Battery %</label>
+              <input type="number" name="currentBatteryLevel" min="0" max="95" placeholder="0–95" required />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="create-reservation-btn" class="btn-solid">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create reservation
+            </button>
+          </div>
+        </form>
+
+        <div class="section-label">
+          <span>Active reservation</span>
+          <span style="color: var(--color-stone)">auto-expire · 15 min</span>
+        </div>
+
+        <div id="reservation-list">
+          <div class="reservation-card empty">
+            <div class="e-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>
+            </div>
+            <div class="e-t">No active reservation</div>
+            <div class="e-s">Submit the form above to hold a connector.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Charging card ── -->
+      <div class="card col-4">
+        <div class="card-head">
+          <div class="left">
+            <div class="card-icon mint">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Charging</div>
+              <div class="card-h">Live session</div>
+            </div>
+          </div>
+          <span class="badge muted" id="charging-status-badge"><span class="dot"></span>Idle</span>
+        </div>
+        <hr class="brand-divider" />
+
+        <div id="charging-empty" class="charge-empty">
+          <div class="icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3>No active charging</h3>
+          <p>Start a session from a held reservation to see live telemetry.</p>
+        </div>
+
+        <div id="charging-live-display" class="hidden">
+          <div class="gauge-wrap">
+            <div class="gauge">
+              <svg viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="88" stroke="#F1EEE6" stroke-width="14" fill="none"/>
+                <circle id="gauge-progress" cx="100" cy="100" r="88"
+                  stroke="url(#g1)" stroke-width="14" fill="none"
+                  stroke-linecap="round"
+                  stroke-dasharray="0 553"/>
+                <defs>
+                  <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#1D9E75"/>
+                    <stop offset="100%" stop-color="#0F6E56"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="center">
+                <div class="pct"><span id="charging-soc">0</span><span class="unit">%</span></div>
+                <div class="lab"><span class="live-dot"></span>State of charge</div>
+              </div>
+            </div>
+            <div class="charge-context">
+              <div><strong id="charging-charge-box">—</strong> · Conn #<span id="charging-connector">—</span></div>
+              <div>Plate <strong id="charging-plate">—</strong></div>
+            </div>
+          </div>
+
+          <div class="charge-stats">
+            <div class="charge-stat">
+              <div class="k">Power</div>
+              <div class="v"><span id="charging-power">—</span><small>kW</small></div>
+            </div>
+            <div class="charge-stat">
+              <div class="k">Energy</div>
+              <div class="v"><span id="charging-energy">—</span><small>kWh</small></div>
+            </div>
+            <div class="charge-stat">
+              <div class="k">Cost</div>
+              <div class="v"><span id="charging-cost">—</span><small>RWF</small></div>
+            </div>
+          </div>
+
+          <div class="charge-footer">
+            <span>ETA <span id="charging-eta">—</span> h</span>
+            <span id="charging-status-display">—</span>
+          </div>
+
+          <button class="btn-stop" id="stop-charging-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            Stop charging session
+          </button>
+        </div>
+
+        <!-- TODO: recent sessions API -->
+        <div id="recent-sessions-list" class="hidden"></div>
+      </div>
+
     </div>
 
-    <!-- Reservation + Charging section -->
-    <div id="reservation-charging-section" class="w-100 d-none mb-3">
-        <div class="row gy-3">
-            <div class="col-12 col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                        <span>Reservation</span>
-                        <span class="badge bg-secondary" id="reservation-status">—</span>
-                    </div>
-                    <div class="card-body">
-                        <form id="reservation-form" class="row g-2">
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small mb-0">Charge Box ID</label>
-                                <input type="text" class="form-control form-control-sm" name="chargeBoxId" required>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small mb-0">Connector</label>
-                                <input type="number" class="form-control form-control-sm" name="connectorId" min="1" required>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small mb-0">Plate Number</label>
-                                <input type="text" class="form-control form-control-sm" name="plateNumber" required>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small mb-0">Battery %</label>
-                                <input type="number" class="form-control form-control-sm" name="currentBatteryLevel" min="0" max="95" required>
-                            </div>
-                            <div class="col-12 d-flex gap-2 mt-2">
-                                <button type="submit" class="btn btn-primary btn-sm" id="create-reservation-btn">Create Reservation</button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" id="cancel-reservation-btn" disabled>Cancel Reservation</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Charging</div>
-                    <div class="card-body">
-                        <div class="d-flex gap-2 mb-3">
-                            <button type="button" class="btn btn-success btn-sm" id="start-charging-btn" disabled>Start Charging</button>
-                            <button type="button" class="btn btn-warning btn-sm" id="stop-charging-btn" disabled>Stop Charging</button>
-                        </div>
-                        <div id="charging-live-display" class="d-none">
-                            <dl class="row mb-0 small">
-                                <dt class="col-6 text-muted">Cost (KES)</dt>
-                                <dd class="col-6 mb-1 fw-semibold" id="charging-cost">—</dd>
-                                <dt class="col-6 text-muted">Energy (kWh)</dt>
-                                <dd class="col-6 mb-1" id="charging-energy">—</dd>
-                                <dt class="col-6 text-muted">Battery (%)</dt>
-                                <dd class="col-6 mb-1" id="charging-soc">—</dd>
-                                <dt class="col-6 text-muted">Time to full (h)</dt>
-                                <dd class="col-6 mb-1" id="charging-eta">—</dd>
-                                <dt class="col-6 text-muted">Status</dt>
-                                <dd class="col-6 mb-0" id="charging-status-display">—</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- ─── Status strip ───────────────────────────────────── -->
+    <div class="status-strip">
+      <div class="status-tile ok" id="tile-wallet">
+        <div class="si">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 14h2"/><path d="M3 9V7a2 2 0 0 1 2-2h11"/></svg>
         </div>
+        <div class="info">
+          <div class="k">Wallet</div>
+          <div class="v">—</div>
+        </div>
+      </div>
+      <div class="status-tile info" id="tile-wallet-tx">
+        <div class="si">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 7 12 10 5 14 19 17 12 21 12"/></svg>
+        </div>
+        <div class="info">
+          <div class="k">Wallet TX</div>
+          <div class="v">Idle</div>
+        </div>
+      </div>
+      <div class="status-tile warn" id="tile-reservations">
+        <div class="si">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+        </div>
+        <div class="info">
+          <div class="k">Reservations</div>
+          <div class="v">None</div>
+        </div>
+      </div>
+      <div class="status-tile ok" id="tile-charger">
+        <div class="si">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h4"/><path d="M15 7h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+        </div>
+        <div class="info">
+          <div class="k">Charger</div>
+          <div class="v">Available</div>
+        </div>
+      </div>
+      <div class="status-tile info" id="tile-session">
+        <div class="si">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="info">
+          <div class="k">Session</div>
+          <div class="v">Idle</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Notification cards -->
-    <div id="user-notifications" class="w-100 d-none">
-        <div class="row gy-3">
-            <div class="col-12 col-md-6 col-xl">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Wallet Balance</div>
-                    <div class="card-body overflow-auto" style="max-height:300px" id="wallet-balance-notification"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Wallet Transaction</div>
-                    <div class="card-body overflow-auto" style="max-height:300px" id="wallet-transaction-notification"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Reservation</div>
-                    <div class="card-body overflow-auto" style="max-height:300px" id="reservation-notification"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Charger Status</div>
-                    <div class="card-body overflow-auto" style="max-height:300px" id="status-notification"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">Charging Session</div>
-                    <div class="card-body overflow-auto" style="max-height:300px" id="charging-notification"></div>
-                </div>
-            </div>
+    <!-- ─── Debug log ───────────────────────────────────────── -->
+    <div class="debug" id="debug-card">
+      <div class="debug-head" id="debug-head">
+        <div class="left">
+          <div class="icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div>
+            <h4>STOMP message log</h4>
+            <div class="count"><span id="stomp-log-count">0</span> events · click to expand</div>
+          </div>
         </div>
-
-        <!-- STOMP log -->
-        <div class="card mt-3">
-            <div class="card-header fw-semibold">STOMP Message Log</div>
-            <div class="card-body p-2">
-                <div id="stomp-log"
-                     class="font-monospace small overflow-auto bg-dark text-light p-2 rounded"
-                     style="max-height:250px"></div>
-            </div>
+        <div class="chevron">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
+      </div>
+      <div class="debug-body" id="stomp-log"></div>
     </div>
+
+  </div>
 </div>
 
 <!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="js/index.js"></script>
 </body>
 </html>

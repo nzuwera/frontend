@@ -6,27 +6,10 @@ const local_storage = utils.storage();
 let stompClient = null;
 let subscriptions = new Map();
 
-const SELECTORS = {
-  walletBalance: "wallet-balance-notification",
-  walletTransaction: "wallet-transaction-notification",
-  reservation: "reservation-notification",
-  chargingStatus: "status-notification",
-  chargingSession: "charging-notification",
-};
-
-const RENDERERS = {
-  walletBalance: (env) => env.message ?? "(no message)",
-  walletTransaction: (env) => env.message ?? "(no message)",
-  reservation: (env) => formatReservation(env.payload),
-  chargingStatus: (env) => formatChargingStatus(env.payload),
-  chargingSession: (env) => formatChargingSession(env.payload),
-};
-
 function dispatchNotify(key, env) {
   document.dispatchEvent(new CustomEvent(`stomp:${key}`, { detail: env }));
 }
 
-const MAX_NOTIFICATIONS = 100;
 const MAX_LOG_LINES = 200;
 
 const WS_CLOSE_CODE_MEANING = {
@@ -43,35 +26,25 @@ const WS_CLOSE_CODE_MEANING = {
   4003: "Application: forbidden",
 };
 
-function formatReservation(p) {
-  if (!p) return "(empty payload)";
-  return `#${p.id} ${p.status} ${p.chargeBoxId}/${p.connectorId} reservation=${p.reservationAmount} KES`;
-}
-
-function formatChargingStatus(p) {
-  if (!p) return "(empty payload)";
-  return `${p.status} (${p.chargerId}/${p.connectorId})`;
-}
-
-function formatChargingSession(p) {
-  if (!p) return "(empty payload)";
-  return `${p.status} energy=${p.energy}kWh cost=${p.cost} SoC=${p.stateOfCharge}% eta=${p.timeToFullCharge}h`;
-}
-
 class SocketManager {
   constructor(brokerURL, tokenProvider) {
     this.brokerURL = brokerURL;
     this.tokenProvider = tokenProvider;
     this.chargerKeys = [];
+    this.logCount = 0;
+    this._debugBound = false;
   }
 
   initialize() {
+    this.bindDebugToggle();
     if (stompClient) stompClient.deactivate();
 
     const token =
       typeof this.tokenProvider === "function"
         ? this.tokenProvider()
         : this.tokenProvider;
+
+    this.setWsState("connecting");
 
     stompClient = new StompJs.Client({
       brokerURL: this.brokerURL,
@@ -93,6 +66,8 @@ class SocketManager {
 
     stompClient.onConnect = (frame) => {
       console.log("Connected:", frame);
+      this.setWsState("connected");
+      this.appendLog(`[INFO] Connected ${frame.headers["server"] ?? ""}`.trim());
       this._setupSubscriptions();
     };
     stompClient.onStompError = (frame) => {
@@ -103,6 +78,7 @@ class SocketManager {
     stompClient.onWebSocketError = (event) => {
       const url = event?.target?.url ?? this.brokerURL;
       const type = event?.type ?? "error";
+      this.setWsState("disconnected");
       this.handleError(
         `WebSocket ${type} on ${url} — open DevTools → Network → WS for upgrade status (401/403 = backend rejected handshake)`
       );
@@ -112,15 +88,16 @@ class SocketManager {
       const reason = event?.reason || "(no reason)";
       const wasClean = event?.wasClean;
       const meaning = WS_CLOSE_CODE_MEANING[code] ?? "unknown";
+      this.setWsState("disconnected");
       this.appendLog(
-        `[WS CLOSE] code=${code} (${meaning}) reason="${reason}" clean=${wasClean}`
+        `[WARN] WS CLOSE code=${code} (${meaning}) reason="${reason}" clean=${wasClean}`
       );
       if (!wasClean) {
         this.handleError(`WebSocket closed: code ${code} (${meaning})`);
       }
     };
     this.appendLog(
-      `[WS CONNECT] url=${this.brokerURL} token=${
+      `[INFO] WS CONNECT url=${this.brokerURL} token=${
         token ? "present(" + token.length + " chars)" : "MISSING"
       }`
     );
@@ -140,10 +117,10 @@ class SocketManager {
       } catch {
         env = { message: raw, payload: null };
       }
-      this.appendNotification(SELECTORS[key], RENDERERS[key](env));
-      this.appendLog(`[${key}] ${raw}`);
+      this.appendLog(`[OK] ${key} ${raw}`);
       dispatchNotify(key, env);
     });
+    this.appendLog(`[INFO] Subscribed ${destination}`);
   }
 
   subscribeReservation() {
@@ -187,6 +164,7 @@ class SocketManager {
       this.chargerKeys = [];
       stompClient.deactivate();
       stompClient = null;
+      this.setWsState("disconnected");
       console.log("Disconnected from WebSocket server.");
     }
   }
@@ -213,78 +191,82 @@ class SocketManager {
 
   handleError(error) {
     console.log("WebSocket Error:", error);
+    this.appendLog(`[WARN] ${error}`);
     utils.showAlert(`Connection error: ${error}`, "danger");
   }
 
-  appendNotification(selector, body) {
-    const element = document.getElementById(selector);
-    if (!element) return;
-
-    const entry = document.createElement("div");
-    entry.classList.add("notification-entry");
-
-    const ts = document.createElement("small");
-    ts.classList.add("text-muted", "d-block");
-    ts.textContent = new Date().toISOString();
-
-    const content = document.createElement("pre");
-    content.classList.add("mb-1");
-    content.textContent = body;
-
-    entry.appendChild(ts);
-    entry.appendChild(content);
-
-    if (element.children.length > 0) {
-      const hr = document.createElement("hr");
-      hr.classList.add("my-1");
-      element.appendChild(hr);
+  setWsState(state) {
+    const pill = document.getElementById("ws-pill");
+    if (!pill) return;
+    pill.classList.remove("connecting", "disconnected");
+    const txt = pill.querySelector(".ws-text");
+    if (state === "connecting") {
+      pill.classList.add("connecting");
+      if (txt) txt.textContent = "connecting…";
+    } else if (state === "disconnected") {
+      pill.classList.add("disconnected");
+      if (txt) txt.textContent = "disconnected";
+    } else {
+      if (txt) txt.textContent = "STOMP connected";
     }
-    element.appendChild(entry);
+  }
 
-    while (
-      element.querySelectorAll(".notification-entry").length > MAX_NOTIFICATIONS
-    ) {
-      const first = element.querySelector(".notification-entry");
-      const prevHr = first.previousElementSibling;
-      if (prevHr && prevHr.tagName === "HR") prevHr.remove();
-      first.remove();
+  bindDebugToggle() {
+    if (this._debugBound) return;
+    const head = document.getElementById("debug-head");
+    const card = document.getElementById("debug-card");
+    if (head && card) {
+      head.addEventListener("click", () => card.classList.toggle("open"));
+      this._debugBound = true;
     }
-
-    element.scrollTop = element.scrollHeight;
   }
 
   appendLog(text) {
     const stompLog = document.getElementById("stomp-log");
     if (!stompLog) return;
 
+    const cls = this.classifyLine(text);
+    const lvl = this.extractLevel(text, cls);
+    const body = text.replace(/^\[[A-Z]+\]\s*/, "");
+
+    const ts = new Date();
+    const tsStr = `${String(ts.getHours()).padStart(2, "0")}:${String(ts.getMinutes()).padStart(2, "0")}:${String(ts.getSeconds()).padStart(2, "0")}.${String(ts.getMilliseconds()).padStart(3, "0")}`;
+
     const line = document.createElement("div");
-    line.classList.add("log-line");
-
-    const ts = document.createElement("span");
-    ts.classList.add("text-muted", "me-2");
-    ts.textContent = new Date().toISOString();
-
-    const msg = document.createElement("span");
-    msg.textContent = text;
-
-    line.appendChild(ts);
-    line.appendChild(msg);
+    line.className = `debug-line ${cls}`;
+    line.innerHTML = `<span class="ts">${tsStr}</span><span class="lvl">[${lvl}]</span><span class="msg"></span>`;
+    line.querySelector(".msg").textContent = body;
     stompLog.appendChild(line);
 
     while (stompLog.children.length > MAX_LOG_LINES) {
       stompLog.firstChild.remove();
     }
-
     stompLog.scrollTop = stompLog.scrollHeight;
+
+    this.logCount++;
+    const counter = document.getElementById("stomp-log-count");
+    if (counter) counter.textContent = String(this.logCount);
+  }
+
+  classifyLine(text) {
+    if (text.startsWith("[DEBUG]")) return "debug-l";
+    if (text.startsWith("[OK]")) return "ok-l";
+    if (text.startsWith("[WARN]")) return "warn-l";
+    return "info-l";
+  }
+
+  extractLevel(text, cls) {
+    const m = text.match(/^\[([A-Z]+)\]/);
+    if (m) return m[1];
+    return cls === "ok-l" ? "OK" : cls === "warn-l" ? "WARN" : cls === "debug-l" ? "DEBUG" : "INFO";
   }
 
   clearNotifications() {
-    Object.values(SELECTORS).forEach((selector) => {
-      const el = document.getElementById(selector);
-      if (el) el.textContent = "";
-    });
     const stompLog = document.getElementById("stomp-log");
     if (stompLog) stompLog.textContent = "";
+    this.logCount = 0;
+    const counter = document.getElementById("stomp-log-count");
+    if (counter) counter.textContent = "0";
   }
 }
 

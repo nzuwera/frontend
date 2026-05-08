@@ -1,0 +1,225 @@
+/* ============================================================
+   AFRISOFT SOLUTIONS — Design Tokens
+   Source: afrisoft-solutions-logo.fig
+   ============================================================ */
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('fonts/Nunito-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('fonts/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ── Brand Colors ─────────────────────────────────────────── */
+:root {
+  /* Primary greens */
+  --color-deep-forest:      #0F6E56;   /* Primary brand green */
+  --color-deep-forest-dark: #085041;   /* Hover / deep variant */
+  --color-emerald:          #1D9E75;   /* Secondary green */
+  --color-emerald-dark:     #178060;   /* Emerald hover */
+
+  /* Accent */
+  --color-amber:            #EF9F27;   /* Savanna Amber — accent */
+  --color-amber-dark:       #BA7517;   /* Amber gradient end / hover */
+
+  /* Light */
+  --color-mint:             #9FE1CB;   /* Mint Teal — light accent */
+  --color-mint-dark:        #5DCAA3;   /* Deeper mint */
+
+  /* Neutrals */
+  --color-charcoal:         #2C2C2A;   /* Near-black */
+  --color-slate:            #444441;   /* Dark text */
+  --color-mid-gray:         #5F5E5A;   /* Medium gray */
+  --color-stone:            #888780;   /* Muted / label text */
+  --color-border:           #DEDAD1;   /* Subtle border */
+  --color-surface:          #F7F6F3;   /* Off-white surface */
+  --color-white:            #FFFFFF;
+
+  /* Semantic */
+  --color-bg:               var(--color-white);
+  --color-bg-subtle:        var(--color-surface);
+  --color-bg-inverse:       var(--color-deep-forest);
+  --color-fg:               var(--color-charcoal);
+  --color-fg-muted:         var(--color-stone);
+  --color-fg-subtle:        var(--color-mid-gray);
+  --color-fg-inverse:       var(--color-white);
+  --color-accent:           var(--color-amber);
+  --color-primary:          var(--color-deep-forest);
+  --color-primary-hover:    var(--color-deep-forest-dark);
+  --color-secondary:        var(--color-emerald);
+  --color-secondary-hover:  var(--color-emerald-dark);
+  --color-divider:          var(--color-border);
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+:root {
+  --font-sans:    'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Scale */
+  --text-xs:     9px;
+  --text-sm:    11px;
+  --text-base:  13px;
+  --text-md:    15px;
+  --text-lg:    20px;
+  --text-xl:    22px;
+  --text-2xl:   32px;
+  --text-3xl:   42px;
+  --text-hero:  52px;
+
+  /* Weights */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semi:    600;
+  --weight-bold:    700;
+
+  /* Leading */
+  --leading-tight:  1.0;
+  --leading-snug:   1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.7;
+
+  /* Tracking */
+  --tracking-wide:  0.08em;
+  --tracking-wider: 0.12em;
+}
+
+/* ── Semantic Type Styles ─────────────────────────────────── */
+.t-hero {
+  font-family: var(--font-sans);
+  font-size: var(--text-hero);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-fg);
+}
+
+.t-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--color-fg);
+}
+
+.t-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--color-fg);
+}
+
+.t-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--color-fg);
+}
+
+.t-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-snug);
+  color: var(--color-fg);
+}
+
+.t-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--color-fg);
+}
+
+.t-body-md {
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--color-fg);
+}
+
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.t-caption {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-fg-muted);
+}
+
+.t-muted {
+  color: var(--color-fg-muted);
+}
+
+/* ── Spacing ──────────────────────────────────────────────── */
+:root {
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+}
+
+/* ── Border Radius ────────────────────────────────────────── */
+:root {
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+}
+
+/* ── Shadows ──────────────────────────────────────────────── */
+:root {
+  --shadow-xs: 0 1px 2px rgba(44,44,42,0.06);
+  --shadow-sm: 0 1px 4px rgba(44,44,42,0.08), 0 0 1px rgba(44,44,42,0.04);
+  --shadow-md: 0 4px 12px rgba(44,44,42,0.10), 0 0 1px rgba(44,44,42,0.06);
+  --shadow-lg: 0 8px 24px rgba(44,44,42,0.12), 0 0 2px rgba(44,44,42,0.08);
+  --shadow-xl: 0 16px 40px rgba(44,44,42,0.14), 0 0 2px rgba(44,44,42,0.08);
+}
+
+/* ── Accent Divider ───────────────────────────────────────── */
+.brand-divider {
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-amber) 0%, var(--color-amber-dark) 100%);
+  border: none;
+}
+
+/* ── Utility ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-fg);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
