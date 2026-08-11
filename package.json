@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
+  "description": "SafariCharger WebSocket notification monitor",
   "main": "index.html",
   "type": "module",
   "scripts": {
@@ -11,7 +12,10 @@
   "keywords": [],
   "author": "nzuwera",
   "license": "ISC",
-  "description": "",
+  "dependencies": {
+    "@stomp/stompjs": "^7.0.0",
+    "sockjs-client": "^1.6.1"
+  },
   "devDependencies": {
     "vite": "^7.1.10"
   }

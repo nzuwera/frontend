@@ -1,26 +1,28 @@
 export class Utils {
     constructor() {
-        this.errorResponse = document.getElementById('responseMessage')
+        this.errorResponse = document.getElementById('responseMessage');
     }
 
-    showAlert = (message, type, duration = 15000) => {
-        // Create the alert HTML content
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.role = 'alert';
-        alert.innerHTML = `
-        <p>${message}</p>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+    showAlert = (message, type = 'info', duration = 8000) => {
+        const stack = this.errorResponse || document.getElementById('responseMessage');
+        if (!stack) return;
 
-        // Append the alert to the placeholder
-        this.errorResponse.appendChild(alert);
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+          <span class="msg"></span>
+          <button type="button" class="close" aria-label="Close">×</button>
+        `;
+        toast.querySelector('.msg').textContent = message;
 
-        // Auto-dismiss the alert after the specified duration
-        setTimeout(() => {
-            alert.classList.remove('show');
-            alert.addEventListener('transitionend', () => alert.remove());
-        }, duration);
+        const close = () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 250);
+        };
+        toast.querySelector('.close').addEventListener('click', close);
+
+        stack.appendChild(toast);
+        setTimeout(close, duration);
     }
 
     storage = () => {
@@ -34,6 +36,8 @@ export class Utils {
 
     decodeJwt(token) {
         const base64Payload = token.split(".")[1];
-        return atob(base64Payload);
+        const base64 = base64Payload.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64 + "==".slice(0, (4 - base64.length % 4) % 4);
+        return atob(padded);
     }
 }
